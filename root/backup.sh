@@ -5,6 +5,7 @@ for FILE in \
 	/root/*.txt \
 	/etc/squid/*.conf \
 	/etc/network/interfaces \
+	/var/lib/squidguard/db/kids/domains \
 	; do
 	mkdir -p "squid-backup/$(dirname $FILE)"
 	cp "$FILE" "squid-backup/$FILE"
