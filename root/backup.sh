@@ -12,4 +12,5 @@ done
 cd squid-backup
 git add .
 git commit -m "$(date)"
+git push
 
