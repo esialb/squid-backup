@@ -3,7 +3,7 @@
 for FILE in \
 	/root/*.sh \
 	/root/*.txt \
-	/etc/squid/*.conf \
+	/etc/squid/*.conf /etc/squid/*.txt \
 	/etc/network/interfaces \
 	/var/lib/squidguard/db/kids/domains \
 	; do
