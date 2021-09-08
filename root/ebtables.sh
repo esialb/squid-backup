@@ -28,46 +28,54 @@ iptables  -t mangle -A PREROUTING -p tcp -m socket -j DIVERT
 iptables  -t mangle -A PREROUTING -p tcp --dport 80 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3129
 iptables  -t mangle -A PREROUTING -p tcp --dport 443 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3130
 
+iptables -A FORWARD -p udp --dport 443 -j REJECT --reject-with icmp-port-unreachable
+iptables -A FORWARD -p udp --sport 443 -j REJECT --reject-with icmp-port-unreachable
+iptables -A FORWARD -p udp --dport 80 -j REJECT --reject-with icmp-port-unreachable
+iptables -A FORWARD -p udp --sport 80 -j REJECT --reject-with icmp-port-unreachable
+
+
 ## interface facing clients
 CLIENT_IFACE=enp2s0
 
 ## interface facing Internet
 INET_IFACE=enp1s0
 
+
+for proto in tcp udp; do
 # http
 ebtables-legacy -t broute -A BROUTING \
-        -i $CLIENT_IFACE -p ipv6 --ip6-proto tcp --ip6-dport 80 \
+        -i $CLIENT_IFACE -p ipv6 --ip6-proto $proto --ip6-dport 80 \
         -j redirect --redirect-target DROP
 
 ebtables-legacy -t broute -A BROUTING \
-        -i $CLIENT_IFACE -p ipv4 --ip-proto tcp --ip-dport 80 \
+        -i $CLIENT_IFACE -p ipv4 --ip-proto $proto --ip-dport 80 \
         -j redirect --redirect-target DROP
 
 ebtables-legacy -t broute -A BROUTING \
-        -i $INET_IFACE -p ipv6 --ip6-proto tcp --ip6-sport 80 \
+        -i $INET_IFACE -p ipv6 --ip6-proto $proto --ip6-sport 80 \
         -j redirect --redirect-target DROP
 
 ebtables-legacy -t broute -A BROUTING \
-        -i $INET_IFACE -p ipv4 --ip-proto tcp --ip-sport 80 \
+        -i $INET_IFACE -p ipv4 --ip-proto $proto --ip-sport 80 \
         -j redirect --redirect-target DROP
 
 # https
 ebtables-legacy -t broute -A BROUTING \
-        -i $CLIENT_IFACE -p ipv6 --ip6-proto tcp --ip6-dport 443 \
+        -i $CLIENT_IFACE -p ipv6 --ip6-proto $proto --ip6-dport 443 \
         -j redirect --redirect-target DROP
 
 ebtables-legacy -t broute -A BROUTING \
-        -i $CLIENT_IFACE -p ipv4 --ip-proto tcp --ip-dport 443 \
+        -i $CLIENT_IFACE -p ipv4 --ip-proto $proto --ip-dport 443 \
         -j redirect --redirect-target DROP
 
 ebtables-legacy -t broute -A BROUTING \
-        -i $INET_IFACE -p ipv6 --ip6-proto tcp --ip6-sport 443 \
+        -i $INET_IFACE -p ipv6 --ip6-proto $proto --ip6-sport 443 \
         -j redirect --redirect-target DROP
 
 ebtables-legacy -t broute -A BROUTING \
-        -i $INET_IFACE -p ipv4 --ip-proto tcp --ip-sport 443 \
+        -i $INET_IFACE -p ipv4 --ip-proto $proto --ip-sport 443 \
         -j redirect --redirect-target DROP
-
+done
 
 
 if test -d /proc/sys/net/bridge/ ; then
