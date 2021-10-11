@@ -22,5 +22,7 @@ iface br0 inet static
 	netmask 255.255.0.0
 	gateway 10.0.0.1
 	bridge_ports enp1s0 enp2s0
+	post-up rm -R /opt/filter/bypass
+	post-up mkdir -p /opt/filter/bypass/timed
 	post-up /opt/filter/apply.sh
 
