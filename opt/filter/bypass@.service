@@ -3,13 +3,12 @@ Description=SQUID Bypass: %i
 After=network.target
 
 [Service]
-WorkingDirectory=/opt/filter/%i
+WorkingDirectory=/opt/filter/
 
 User=root
 Group=root
 
 Type=oneshot
-Restart=always
 RemainAfterExit=yes
 ExecStart=ln -s "/opt/filter/devices/%i" "/opt/filter/bypass/%i"
 ExecStart=/opt/filter/apply.sh
