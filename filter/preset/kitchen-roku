@@ -1,0 +1,20 @@
+#!/bin/bash
+
+[ $EUID -eq 0 ] || exec sudo "$0" "$@"
+cd "$(dirname "$(readlink -f "$0")")"
+
+case "$1" in
+	start) 
+		systemctl enable bypass@living-room-roku
+		systemctl start bypass@living-room-roku 
+		;;
+	stop) 
+		systemctl disable bypass@living-room-roku
+		systemctl stop bypass@living-room-roku 
+		;;
+	*) 
+		echo "start | stop"
+		;;
+esac
+
+

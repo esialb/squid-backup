@@ -14,6 +14,7 @@ iptables -t nat -F
 iptables -t mangle -F
 ebtables-legacy -F
 ebtables-legacy -t broute -F
+ebtables -F
 
 # IPv4-only
 ip -f inet rule add fwmark 1 lookup 100
@@ -87,21 +88,16 @@ if test -d /proc/sys/net/bridge/ ; then
   unset i
 fi
 
-#block
-for MAC in $(find block/ -not -type d -exec cat {} \;); do
-	ebtables -I FORWARD 1 -s $MAC -j DROP
-	ebtables -I FORWARD 1 -d $MAC -j DROP
+for DEVICE in $(./status.sh | grep BLOCK | awk '{print $2}'); do
+	for MAC in `cat $DEVICE`; do
+	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -s $MAC -j redirect --redirect-target DROP
+	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -d $MAC -j redirect --redirect-target DROP
+	done
 done
 
-#bypass
-for MAC in $(find bypass/ -not -type d -exec cat {} \;); do
-	ebtables -I FORWARD 1 -s $MAC -j ACCEPT
-	ebtables -I FORWARD 1 -d $MAC -j ACCEPT
-	ebtables-legacy -t broute -I BROUTING 1 -s $MAC -j ACCEPT
-	ebtables-legacy -t broute -I BROUTING 1 -d $MAC -j ACCEPT
+for DEVICE in $(./status.sh | grep BYPASS | awk '{print $2}'); do
+	for MAC in `cat $DEVICE`; do
+	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -s $MAC -j redirect --redirect-target ACCEPT
+	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -d $MAC -j redirect --redirect-target ACCEPT
+	done
 done
-
-ebtables -I FORWARD 1 \
-	-p ipv4 --ip-destination $INET_IP \
-	-j DROP
-
