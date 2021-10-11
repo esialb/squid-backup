@@ -2,6 +2,13 @@
 
 cd "$(dirname "$(readlink -f "$0")")"
 
+## interface facing clients
+CLIENT_IFACE=enp2s0
+
+## interface facing Internet
+INET_IFACE=enp1s0
+INET_IP=10.0.0.254
+
 iptables -F
 iptables -t nat -F
 iptables -t mangle -F
@@ -27,6 +34,7 @@ iptables -t mangle -A DIVERT -j ACCEPT
 
 iptables  -t mangle -A PREROUTING -p tcp -m socket -j DIVERT
 
+iptables  -t mangle -A PREROUTING -p tcp -d $INET_IP --dport 80 -j ACCEPT
 iptables  -t mangle -A PREROUTING -p tcp --dport 80 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3129
 iptables  -t mangle -A PREROUTING -p tcp --dport 443 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3130
 
@@ -34,14 +42,6 @@ iptables -A FORWARD -p udp --dport 443 -j REJECT --reject-with icmp-port-unreach
 iptables -A FORWARD -p udp --sport 443 -j REJECT --reject-with icmp-port-unreachable
 iptables -A FORWARD -p udp --dport 80 -j REJECT --reject-with icmp-port-unreachable
 iptables -A FORWARD -p udp --sport 80 -j REJECT --reject-with icmp-port-unreachable
-
-
-## interface facing clients
-CLIENT_IFACE=enp2s0
-
-## interface facing Internet
-INET_IFACE=enp1s0
-
 
 for proto in tcp udp; do
 # http
@@ -100,4 +100,8 @@ for MAC in $(find bypass/ -not -type d -exec cat {} \;); do
 	ebtables-legacy -t broute -I BROUTING 1 -s $MAC -j ACCEPT
 	ebtables-legacy -t broute -I BROUTING 1 -d $MAC -j ACCEPT
 done
+
+ebtables -I FORWARD 1 \
+	-p ipv4 --ip-destination $INET_IP \
+	-j DROP
 
