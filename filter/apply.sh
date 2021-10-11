@@ -27,7 +27,6 @@ iptables -t mangle -A DIVERT -j ACCEPT
 
 iptables  -t mangle -A PREROUTING -p tcp -m socket -j DIVERT
 
-iptables  -t mangle -A PREROUTING -p tcp -d 10.0.0.254 --dport 80 -j ACCEPT
 iptables  -t mangle -A PREROUTING -p tcp --dport 80 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3129
 iptables  -t mangle -A PREROUTING -p tcp --dport 443 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3130
 
@@ -88,13 +87,16 @@ if test -d /proc/sys/net/bridge/ ; then
   unset i
 fi
 
-#local http
-ebtables -A INPUT \
-	-i $CLIENT_IFACE -p ipv4 --ip-proto tcp --ip-dport 80 \
-	-j DROP
+#block
+for MAC in $(find block/ -not -type d -exec cat {} \;); do
+	ebtables -I FORWARD 1 -s $MAC -j DROP
+	ebtables -I FORWARD 1 -d $MAC -j DROP
+done
 
 #bypass
 for MAC in $(find bypass/ -not -type d -exec cat {} \;); do
+	ebtables -I FORWARD 1 -s $MAC -j ACCEPT
+	ebtables -I FORWARD 1 -d $MAC -j ACCEPT
 	ebtables-legacy -t broute -I BROUTING 1 -s $MAC -j ACCEPT
 	ebtables-legacy -t broute -I BROUTING 1 -d $MAC -j ACCEPT
 done
