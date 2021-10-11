@@ -88,7 +88,7 @@ if test -d /proc/sys/net/bridge/ ; then
 fi
 
 #bypass
-for MAC in `cat bypass/*`; do
+for MAC in $(find bypass/ -not -type d -exec cat {} \;); do
 	ebtables-legacy -t broute -I BROUTING 1 -s $MAC -j ACCEPT
 	ebtables-legacy -t broute -I BROUTING 1 -d $MAC -j ACCEPT
 done
