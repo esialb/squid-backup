@@ -1,0 +1,21 @@
+[Unit]
+Description=SQUID Bypass: %i
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/filter/%i
+
+User=root
+Group=root
+
+Type=oneshot
+Restart=always
+RemainAfterExit=yes
+ExecStart=ln -s "/opt/filter/devices/%i" "/opt/filter/bypass/%i"
+ExecStart=/opt/filter/apply.sh
+ExecStop=rm "/opt/filter/bypass/%i"
+ExecStop=/opt/filter/apply.sh
+
+[Install]
+WantedBy=multi-user.target
+
