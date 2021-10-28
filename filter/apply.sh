@@ -97,7 +97,7 @@ done
 
 for DEVICE in $(./status.sh | grep BYPASS | awk '{print $2}'); do
 	for MAC in `cat $DEVICE`; do
-	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -s $MAC -j redirect --redirect-target ACCEPT
-	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -d $MAC -j redirect --redirect-target ACCEPT
+	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -s $MAC -j ACCEPT
+	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -d $MAC -j ACCEPT
 	done
 done
