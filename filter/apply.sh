@@ -88,16 +88,22 @@ if test -d /proc/sys/net/bridge/ ; then
   unset i
 fi
 
-for DEVICE in $(./status.sh | grep BLOCK | awk '{print $2}'); do
+# lockdown
+# ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -j redirect --redirect-target DROP
+# ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -j redirect --redirect-target DROP
+
+for DEVICE in $(./status.sh | uniq | grep BLOCK | awk '{print $2}'); do
 	for MAC in `cat $DEVICE`; do
 	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -s $MAC -j redirect --redirect-target DROP
 	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -d $MAC -j redirect --redirect-target DROP
 	done
 done
 
-for DEVICE in $(./status.sh | grep BYPASS | awk '{print $2}'); do
+for DEVICE in $(./status.sh | uniq | grep BYPASS | awk '{print $2}'); do
 	for MAC in `cat $DEVICE`; do
 	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -s $MAC -j ACCEPT
 	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -d $MAC -j ACCEPT
 	done
 done
+
+

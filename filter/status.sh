@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "$(dirname "$(readlink -f "$0")")"
+
 BYPASSED="$(find bypass/ -not -type d -exec cat {} \; | sort | uniq | grep :)"
 BLOCKED="$(find block/ -not -type d -exec cat {} \; | sort | uniq | grep :)"
 
