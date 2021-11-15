@@ -16,7 +16,7 @@ allow-hotplug enp3s0
 iface enp3s0 inet dhcp
 
 allow-hotplug enp4s0
-iface enp4s0 inet dhcp
+iface enp4s0 inet manual
 
 auto br0
 iface br0 inet static
@@ -27,4 +27,11 @@ iface br0 inet static
 	post-up rm -R /opt/filter/bypass
 	post-up mkdir -p /opt/filter/bypass/timed
 	post-up /opt/filter/apply.sh
+
+allow-hotplug vde0
+iface vde0 inet manual
+
+auto br1
+iface br1 inet manual
+	bridge_ports vde0 enp4s0
 
