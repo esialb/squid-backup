@@ -20,6 +20,7 @@ iface enp4s0 inet manual
 
 auto br0
 iface br0 inet static
+	hwaddress ether fa:8e:b8:79:dd:d7
 	address 10.0.0.254
 	netmask 255.255.0.0
 	gateway 10.0.0.1
