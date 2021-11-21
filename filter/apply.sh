@@ -2,8 +2,6 @@
 
 cd "$(dirname "$(readlink -f "$0")")"
 
-BRIDGE_MAC=fa:8e:b8:79:dd:d7
-
 ## interface facing clients
 CLIENT_IFACE=enp2s0
 
@@ -14,9 +12,10 @@ INET_IP=10.0.0.254
 iptables -F
 iptables -t nat -F
 iptables -t mangle -F
-ebtables -F
-ebtables -t nat -F
+ebtables-legacy -F
 ebtables-legacy -t broute -F
+ebtables -F
+
 # IPv4-only
 ip -f inet rule add fwmark 1 lookup 100
 ip -f inet route add local default dev enp2s0 table 100
@@ -45,31 +44,41 @@ iptables -A FORWARD -p udp --sport 443 -j REJECT --reject-with icmp-port-unreach
 iptables -A FORWARD -p udp --dport 80 -j REJECT --reject-with icmp-port-unreachable
 iptables -A FORWARD -p udp --sport 80 -j REJECT --reject-with icmp-port-unreachable
 
-BYPASS=$( find bypass/ -not -type d -exec cat {} \; | grep : | sort | uniq | tr '\n' ',' )
-BLOCK=$( find block/ -not -type d -exec cat {} \; | grep : | sort | uniq | tr '\n' ',' )
+for proto in tcp udp; do
+# http
+ebtables-legacy -t broute -A BROUTING \
+        -i $CLIENT_IFACE -p ipv6 --ip6-proto $proto --ip6-dport 80 \
+        -j redirect --redirect-target DROP
 
+ebtables-legacy -t broute -A BROUTING \
+        -i $CLIENT_IFACE -p ipv4 --ip-proto $proto --ip-dport 80 \
+        -j redirect --redirect-target DROP
 
-ebtables -t nat -A PREROUTING --among-src $BYPASS -j ACCEPT
-ebtables -t nat -A PREROUTING --among-dst $BYPASS -j ACCEPT
+ebtables-legacy -t broute -A BROUTING \
+        -i $INET_IFACE -p ipv6 --ip6-proto $proto --ip6-sport 80 \
+        -j redirect --redirect-target DROP
 
-ebtables -t nat -A PREROUTING --among-src $BLOCK -j DROP
-ebtables -t nat -A PREROUTING --among-dst $BLOCK -j DROP
+ebtables-legacy -t broute -A BROUTING \
+        -i $INET_IFACE -p ipv4 --ip-proto $proto --ip-sport 80 \
+        -j redirect --redirect-target DROP
 
+# https
+ebtables-legacy -t broute -A BROUTING \
+        -i $CLIENT_IFACE -p ipv6 --ip6-proto $proto --ip6-dport 443 \
+        -j redirect --redirect-target DROP
 
-for port in 80 443; do
-  # send tcp to squid
-  ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv6 --ip6-proto tcp --ip6-dport $port -j dnat --to-dst $BRIDGE_MAC
-  ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv4 --ip-proto tcp --ip-dport $port -j dnat --to-dst $BRIDGE_MAC
-  ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv6 --ip6-proto tcp --ip6-sport $port -j dnat --to-dst $BRIDGE_MAC
-  ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv4 --ip-proto tcp --ip-sport $port -j dnat --to-dst $BRIDGE_MAC
-  # drop udp stuff from chrome
-  ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv6 --ip6-proto tcp --ip6-dport $port -j DROP
-  ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv4 --ip-proto tcp --ip-dport $port -j DROP
-  ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv6 --ip6-proto tcp --ip6-sport $port -j DROP
-  ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv4 --ip-proto tcp --ip-sport $port -j DROP
+ebtables-legacy -t broute -A BROUTING \
+        -i $CLIENT_IFACE -p ipv4 --ip-proto $proto --ip-dport 443 \
+        -j redirect --redirect-target DROP
+
+ebtables-legacy -t broute -A BROUTING \
+        -i $INET_IFACE -p ipv6 --ip6-proto $proto --ip6-sport 443 \
+        -j redirect --redirect-target DROP
+
+ebtables-legacy -t broute -A BROUTING \
+        -i $INET_IFACE -p ipv4 --ip-proto $proto --ip-sport 443 \
+        -j redirect --redirect-target DROP
 done
-
-ebtables -t nat -A PREROUTING -j ACCEPT
 
 if test -d /proc/sys/net/bridge/ ; then
   for i in /proc/sys/net/bridge/*
@@ -82,4 +91,19 @@ fi
 # lockdown
 # ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -j redirect --redirect-target DROP
 # ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -j redirect --redirect-target DROP
+
+for DEVICE in $(./status.sh | uniq | grep BLOCK | awk '{print $2}'); do
+	for MAC in `cat $DEVICE`; do
+	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -s $MAC -j redirect --redirect-target DROP
+	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -d $MAC -j redirect --redirect-target DROP
+	done
+done
+
+for DEVICE in $(./status.sh | uniq | grep BYPASS | awk '{print $2}'); do
+	for MAC in `cat $DEVICE`; do
+	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -s $MAC -j ACCEPT
+	ebtables-legacy -t broute -I BROUTING 1 -i $CLIENT_IFACE -d $MAC -j ACCEPT
+	done
+done
+
 
