@@ -45,8 +45,8 @@ iptables -A FORWARD -p udp --sport 443 -j REJECT --reject-with icmp-port-unreach
 iptables -A FORWARD -p udp --dport 80 -j REJECT --reject-with icmp-port-unreachable
 iptables -A FORWARD -p udp --sport 80 -j REJECT --reject-with icmp-port-unreachable
 
-BYPASS=$( find bypass/ -not -type d -exec cat {} \; | grep : | sort | uniq )
-BLOCK=$( find block/ -not -type d -exec cat {} \; | grep : | sort | uniq )
+BYPASS=$( find bypass/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : | sort | uniq )
+BLOCK=$( find block/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : | sort | uniq )
 
 
 for MAC in $BYPASS; do
