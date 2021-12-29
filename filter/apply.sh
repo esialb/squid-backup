@@ -45,8 +45,8 @@ iptables -A FORWARD -p udp --sport 443 -j REJECT --reject-with icmp-port-unreach
 iptables -A FORWARD -p udp --dport 80 -j REJECT --reject-with icmp-port-unreachable
 iptables -A FORWARD -p udp --sport 80 -j REJECT --reject-with icmp-port-unreachable
 
-BYPASS=$( find bypass/ -not -type d -exec cat {} \; | sed -r 's/#.*//g' | grep : | sort | uniq | tr '\n' ',' )
-BLOCK=$( find block/ -not -type d -exec cat {} \; | sed -r 's/#.*//g' | grep : | sort | uniq | tr '\n' ',' )
+BYPASS=$( find bypass/ -not -type d -exec cat {} \; | grep : | sed -r 's/#.*\n/\n/' | sort | uniq | tr '\n' ',' )
+BLOCK=$( find block/ -not -type d -exec cat {} \; | grep : | sed -r 's/#.*\n/\n/' | sort | uniq | tr '\n' ',' )
 
 
 ebtables -t nat -A PREROUTING --among-src $BYPASS -j ACCEPT
