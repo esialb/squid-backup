@@ -1,2 +1,4 @@
 .google.com
+.gmail.com
+.myon.com
 
