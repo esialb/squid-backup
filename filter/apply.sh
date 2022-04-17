@@ -47,7 +47,11 @@ iptables -A FORWARD -p udp --sport 80 -j REJECT --reject-with icmp-port-unreacha
 
 BYPASS=$( find bypass/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : | sort | uniq )
 BLOCK=$( find block/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : | sort | uniq )
+UNBLOCK=$( find unblock/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : | sort | uniq )
 
+for MAC in $UNBLOCK; do
+  BLOCK=$(echo $BLOCK | grep -v $MAC)
+done
 
 for MAC in $BYPASS; do
   ebtables -t nat -A PREROUTING --src $MAC -j ACCEPT
