@@ -6,7 +6,7 @@ DEVICES="$(cat "$@")"
 
 cd "$(dirname "$(readlink -f "$0")")"
 
-TARGET="/opt/filter/unblock/timed/$(date '+%F-%H-%M-%S')_$TIME"
+TARGET="/opt/filter/bypass/timed/$(date '+%F-%H-%M-%S')_$TIME"
 echo "$DEVICES" > "$TARGET"
 at -M "$TIME" <<FFF
 	rm "$TARGET"

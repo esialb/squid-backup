@@ -1,4 +1,10 @@
 .google.com
 .gmail.com
 .roku.com
+.netflix.com
+.nflxso.net
+.digicert.com
+.gstatic.com
+.rokutime.com
+.boredpanda.com
 
