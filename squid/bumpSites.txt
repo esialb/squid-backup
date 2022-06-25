@@ -7,4 +7,5 @@
 .gstatic.com
 .rokutime.com
 .boredpanda.com
+.microsoft.com
 

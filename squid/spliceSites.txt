@@ -1,1 +1,6 @@
 .mojang.com
+.microsoft.com
+.minecraftforge.net
+.minecraft.net
+
+
