@@ -2,5 +2,6 @@
 .microsoft.com
 .minecraftforge.net
 .minecraft.net
+.gstatic.com
 
 
