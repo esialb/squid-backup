@@ -2,5 +2,6 @@
 
 [ $EUID -eq 0 ] || exec sudo "$0" "$@"
 cd "$(dirname "$(readlink -f "$0")")"
-../bypass.sh "now + 2 hours" ../devices/living-room-roku
+touch ../lockdown
+../apply.sh
 

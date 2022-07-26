@@ -4,6 +4,6 @@
 int main(int argc, char **argv) {
 printf("Content-type: text/plain\n\n");
 fflush(NULL);
-execl(PRESET, PRESET, (const char*)NULL);
+execl(PRESET, "/usr/bin/sudo", PRESET, (const char*)NULL);
 }
 

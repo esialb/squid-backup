@@ -1,0 +1,7 @@
+#!/bin/bash
+
+[ $EUID -eq 0 ] || exec sudo "$0" "$@"
+cd "$(dirname "$(readlink -f "$0")")"
+rm ../lockdown
+../apply.sh
+

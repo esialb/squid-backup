@@ -1,7 +1,10 @@
-.mojang.com
+.gstatic.com
 .microsoft.com
 .minecraftforge.net
 .minecraft.net
-.gstatic.com
-
+.mojang.com
+.netflix.com
+.amazon.com
+.amazonaws.com
+.amazonvideo.com
 
