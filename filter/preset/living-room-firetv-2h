@@ -2,5 +2,5 @@
 
 [ $EUID -eq 0 ] || exec sudo "$0" "$@"
 cd "$(dirname "$(readlink -f "$0")")"
-../unblock.sh "now + 2 hours" ../devices/living-room-firetv
+../timed.sh "now + 2 hours" ../devices/living-room-firetv
 
