@@ -7,4 +7,7 @@
 .amazon.com
 .amazonaws.com
 .amazonvideo.com
+.cqloud.com
+.steampowered.com
+.steamcontent.com
 
