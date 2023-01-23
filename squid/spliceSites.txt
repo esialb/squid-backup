@@ -10,4 +10,9 @@
 .cqloud.com
 .steampowered.com
 .steamcontent.com
+.windows.com
+.windowsupdate.com
+.live.com
+.passport.net
+.msftncsi.com
 

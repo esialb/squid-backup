@@ -30,6 +30,8 @@ echo 0 > /proc/sys/net/ipv4/conf/default/rp_filter
 echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter
 echo 0 > /proc/sys/net/ipv4/conf/enp2s0/rp_filter
 
+echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
+
 iptables -t mangle -N DIVERT
 iptables -t mangle -A DIVERT -j MARK --set-mark 1
 iptables -t mangle -A DIVERT -j ACCEPT
@@ -45,20 +47,28 @@ iptables -A FORWARD -p udp --sport 443 -j REJECT --reject-with icmp-port-unreach
 iptables -A FORWARD -p udp --dport 80 -j REJECT --reject-with icmp-port-unreachable
 iptables -A FORWARD -p udp --sport 80 -j REJECT --reject-with icmp-port-unreachable
 
-BYPASS=$( find bypass/ -not -type d -exec cat {} \; | grep : | sort | uniq | tr '\n' ',' )
-BLOCK=$( find block/ -not -type d -exec cat {} \; | grep : | sort | uniq | tr '\n' ',' )
+BYPASS=$( find bypass/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : | sort | uniq )
+BLOCK=$( find block/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : | sort | uniq )
+UNBLOCK=$( find unblock/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : | sort | uniq )
 
+for MAC in $UNBLOCK; do
+  BLOCK=$(echo $BLOCK | grep -v $MAC)
+done
 
-ebtables -t nat -A PREROUTING --among-src $BYPASS -j ACCEPT
-ebtables -t nat -A PREROUTING --among-dst $BYPASS -j ACCEPT
+for MAC in $BYPASS; do
+  ebtables -t nat -A PREROUTING --src $MAC -j ACCEPT
+  ebtables -t nat -A PREROUTING --dst $MAC -j ACCEPT
+done
 
 if [ -e lockdown ]; then
   ebtables -t nat -A PREROUTING -i $INET_IFACE -j DROP
   ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -j DROP
 else
 
-  ebtables -t nat -A PREROUTING --among-src $BLOCK -j DROP
-  ebtables -t nat -A PREROUTING --among-dst $BLOCK -j DROP
+for MAC in $BLOCK; do
+  ebtables -t nat -A PREROUTING --src $MAC -j DROP
+  ebtables -t nat -A PREROUTING --dst $MAC -j DROP
+done
 
   for port in 80 443; do
     # send tcp to squid
