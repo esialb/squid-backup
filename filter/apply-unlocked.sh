@@ -51,6 +51,15 @@ BYPASS=$( find bypass/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : 
 BLOCK=$( find block/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : | sort | uniq )
 UNBLOCK=$( find unblock/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep : | sort | uniq )
 
+BYPASS_DNS=$( find bypass_dns/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep . | sort | uniq )
+BYPASS_IP=$( find bypass_ip/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep . | sort | uniq )
+
+for HOST in $BYPASS_DNS; do
+   for IP in $( host $HOST | grep "has address" | sed -r 's/.* //' ); do
+     BYPASS_IP="$BYPASS_IP $IP"
+   done
+done
+
 for MAC in $UNBLOCK; do
   BLOCK=$(echo $BLOCK | grep -v $MAC)
 done
@@ -65,10 +74,12 @@ if [ -e lockdown ]; then
   ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -j DROP
 else
 
-for MAC in $BLOCK; do
-  ebtables -t nat -A PREROUTING --src $MAC -j DROP
-  ebtables -t nat -A PREROUTING --dst $MAC -j DROP
-done
+  for IP in $BYPASS_IP; do
+    ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv6 --ip6-dst $IP -j ACCEPT
+    ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv4 --ip-dst $IP -j ACCEPT
+    ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv6 --ip6-src $IP -j ACCEPT
+    ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv4 --ip-src $IP -j ACCEPT
+  done
 
   for port in 80 443; do
     # send tcp to squid
