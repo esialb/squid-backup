@@ -55,10 +55,15 @@ BYPASS_DNS=$( find bypass_dns/ -not -type d -exec cat {} \; | sed -r 's/#.*//' |
 BYPASS_IP=$( find bypass_ip/ -not -type d -exec cat {} \; | sed -r 's/#.*//' | grep . | sort | uniq )
 
 for HOST in $BYPASS_DNS; do
-   for IP in $( host $HOST | grep "has address" | sed -r 's/.* //' ); do
+   for IP in $( host -t A $HOST | grep " address" | sed -r 's/.* //' ); do
+     BYPASS_IP="$BYPASS_IP $IP"
+   done
+   for IP in $( host -t AAAA $HOST | grep " address" | sed -r 's/.* //' ); do
      BYPASS_IP="$BYPASS_IP $IP"
    done
 done
+
+BYPASS_IP=$( echo $BYPASS_IP | sort | uniq )
 
 for MAC in $UNBLOCK; do
   BLOCK=$(echo $BLOCK | grep -v $MAC)
