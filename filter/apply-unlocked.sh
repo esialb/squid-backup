@@ -63,7 +63,7 @@ for HOST in $BYPASS_DNS; do
    done
 done
 
-BYPASS_IP=$( echo $BYPASS_IP | sort | uniq )
+BYPASS_IP=$( echo $BYPASS_IP | tr ' ' '\n' | sort | uniq )
 
 for MAC in $UNBLOCK; do
   BLOCK=$(echo $BLOCK | grep -v $MAC)
@@ -79,11 +79,14 @@ if [ -e lockdown ]; then
   ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -j DROP
 else
 
-  for IP in $BYPASS_IP; do
-    ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv6 --ip6-dst $IP -j ACCEPT
+  for IP in $(echo $BYPASS_IP | tr ' ' '\n' | grep '\.'); do
     ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv4 --ip-dst $IP -j ACCEPT
-    ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv6 --ip6-src $IP -j ACCEPT
     ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv4 --ip-src $IP -j ACCEPT
+  done
+
+  for IP in $(echo $BYPASS_IP | tr ' ' '\n' | grep ':'); do
+    ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv6 --ip6-dst $IP -j ACCEPT
+    ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv6 --ip6-src $IP -j ACCEPT
   done
 
   for port in 80 443; do
