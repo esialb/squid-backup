@@ -1,0 +1,4 @@
+connectivitycheck.gstatic.com
+www.msftncsi.com
+www.msftconnecttest.com
+

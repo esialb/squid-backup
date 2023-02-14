@@ -79,6 +79,16 @@ if [ -e lockdown ]; then
   ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -j DROP
 else
 
+  for port in 80 443; do
+    # drop udp stuff from chrome
+    ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv6 --ip6-proto udp --ip6-dport $port -j dnat --to-dst $BRIDGE_MAC
+    ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv4 --ip-proto udp --ip-dport $port -j dnat --to-dst $BRIDGE_MAC
+    ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv6 --ip6-proto udp --ip6-dport $port -j dnat --to-dst $BRIDGE_MAC
+    ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv4 --ip-proto udp --ip-dport $port -j dnat --to-dst $BRIDGE_MAC
+  done
+
+
+
   for IP in $(echo $BYPASS_IP | tr ' ' '\n' | grep '\.'); do
     ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv4 --ip-dst $IP -j ACCEPT
     ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv4 --ip-src $IP -j ACCEPT
@@ -95,11 +105,6 @@ else
     ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv4 --ip-proto tcp --ip-dport $port -j dnat --to-dst $BRIDGE_MAC
     ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv6 --ip6-proto tcp --ip6-sport $port -j dnat --to-dst $BRIDGE_MAC
     ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv4 --ip-proto tcp --ip-sport $port -j dnat --to-dst $BRIDGE_MAC
-    # drop udp stuff from chrome
-    ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv6 --ip6-proto udp --ip6-dport $port -j dnat --to-dst $BRIDGE_MAC
-    ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -p ipv4 --ip-proto udp --ip-dport $port -j dnat --to-dst $BRIDGE_MAC
-    ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv6 --ip6-proto udp --ip6-dport $port -j dnat --to-dst $BRIDGE_MAC
-    ebtables -t nat -A PREROUTING -i $INET_IFACE -p ipv4 --ip-proto udp --ip-dport $port -j dnat --to-dst $BRIDGE_MAC
   done
   
   ebtables -t nat -A PREROUTING -i $INET_IFACE -j ACCEPT

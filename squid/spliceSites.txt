@@ -15,4 +15,8 @@
 .live.com
 .passport.net
 .msftncsi.com
+.connectivitycheck.gstatic.com
+.msftncsi.com
+.msftconnecttest.com
+.mit.edu
 
