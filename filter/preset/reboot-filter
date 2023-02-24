@@ -4,8 +4,11 @@
 cd "$(dirname "$(readlink -f "$0")")"
 squidGuard -C all
 squid -k reconfigure
+systemctl squid stop
 rm -Rf ../bypass/timed/*
 rm -Rf ../unblock/timed/*
+rm -Rf /var/spool/squid/*
+sudo -u proxy /usr/lib/squid/security_file_certgen -c -s /var/spool/squid/ssl_db -M 64MB
 touch ../lockdown
 reboot
 

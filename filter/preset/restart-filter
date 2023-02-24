@@ -2,10 +2,10 @@
 
 [ $EUID -eq 0 ] || exec sudo "$0" "$@"
 cd "$(dirname "$(readlink -f "$0")")"
+systemctl stop squid
+rm -Rf /var/spool/squid/*
+sudo -u proxy /usr/lib/squid/security_file_certgen -c -s /var/spool/squid/ssl_db -M 64MB
+systemctl start squid
 squidGuard -C all
 squid -k reconfigure
-systemctl restart squid
-rm -Rf ../bypass/timed/*
-rm -Rf ../unblock/timed/*
-../apply.sh
 

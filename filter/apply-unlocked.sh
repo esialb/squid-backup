@@ -77,6 +77,9 @@ done
 if [ -e lockdown ]; then
   ebtables -t nat -A PREROUTING -i $INET_IFACE -j DROP
   ebtables -t nat -A PREROUTING -i $CLIENT_IFACE -j DROP
+elif [ -e jailbreak ]; then
+  ebtables -F
+  ebtables -t nat -F
 else
 
   for port in 80 443; do
